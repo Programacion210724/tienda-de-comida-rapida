@@ -542,10 +542,10 @@
       }
     }
 
-    /* ========== MOBILE HERO TEXT ========== */
+    /* ========== HERO TEXT ========== */
     .mobile-text-above,
     .mobile-text-below {
-      display: none;
+      display: block;
     }
 
     .mobile-text-above h1 {
@@ -570,6 +570,12 @@
         display: block;
       }
 
+      .overlay-content {
+        display: none;
+      }
+    }
+
+    @media (min-width: 769px) {
       .overlay-content {
         display: none;
       }
@@ -1165,7 +1171,7 @@
         <!-- Promo 1 -->
         <div class="swiper-slide">
           <div class="relative rounded-3xl overflow-hidden group" style="aspect-ratio: 2/1;">
-            <img src="combo.png"
+            <img src="Combo familiar.jpg"
                  alt="Promo Martes"
                  class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105">
           </div>
@@ -1174,7 +1180,7 @@
         <!-- Promo 2 -->
         <div class="swiper-slide">
           <div class="relative rounded-3xl overflow-hidden group" style="aspect-ratio: 2/1;">
-            <img src="amazonia.png"
+            <img src="Fire.jpg"
                  alt="Promo Fin de Semana"
                  class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105">
           </div>
