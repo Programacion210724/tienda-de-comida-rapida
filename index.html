@@ -6,6 +6,12 @@
   <title>Pollo Rey — Sabor que Corona</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://pooxwjkqxzksnjfouqiz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvb3h3amtxeHprc25qZm91cWl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1ODg5NjQsImV4cCI6MjEwMDE2NDk2NH0.YdtGnxu-L1mAJwfYoWa5wMKNtvSUwHKn26lKnbVKGGg';
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -59,22 +65,8 @@
         speed: 600,
       });
     });
-
-    // Load user comments on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        if (window.Alpine && window.Alpine.store) {
-          // Wait for Alpine to be ready
-          window.Alpine.nextTick(() => {
-            const body = document.querySelector('body');
-            if (body.__x) {
-              body.__x.$data.loadComments();
-            }
-          });
-        }
-      }, 100);
-    });
   </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -683,7 +675,7 @@
     }
   </style>
 </head>
-  <body class="bg-royal-black text-white font-sans overflow-x-hidden antialiased" x-data="{ mobileOpen: false, activeTestimonial: 0, mapModal: false, menuModal: false, zoom: 1, initialDistance: 0, initialZoom: 1, handleTouchStart(event) { if(event.touches.length === 2) { this.initialDistance = this.getDistance(event.touches[0], event.touches[1]); this.initialZoom = this.zoom; } }, handleTouchMove(event) { if(event.touches.length === 2) { event.preventDefault(); const currentDistance = this.getDistance(event.touches[0], event.touches[1]); this.zoom = Math.min(Math.max(this.initialZoom * (currentDistance / this.initialDistance), 0.5), 3); } }, handleTouchEnd() { this.initialDistance = 0; }, getDistance(touch1, touch2) { return Math.sqrt(Math.pow(touch2.clientX - touch1.clientX, 2) + Math.pow(touch2.clientY - touch1.clientY, 2)); }, userComments: [], commentForm: { name: '', comment: '', rating: 0 }, successMessage: false, loadComments() { const comments = localStorage.getItem('polloReyComments'); if (comments) { this.userComments = JSON.parse(comments); } }, saveComment() { if (this.commentForm.name && this.commentForm.comment && this.commentForm.rating > 0) { const newComment = { id: Date.now(), name: this.commentForm.name, comment: this.commentForm.comment, rating: this.commentForm.rating, date: new Date().toLocaleDateString() }; this.userComments.unshift(newComment); localStorage.setItem('polloReyComments', JSON.stringify(this.userComments)); this.commentForm = { name: '', comment: '', rating: 0 }; this.showSuccess(); } }, showSuccess() { this.successMessage = true; confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); setTimeout(() => { this.successMessage = false; }, 3000); } }">
+  <body class="bg-royal-black text-white font-sans overflow-x-hidden antialiased" x-data="{ mobileOpen: false, activeTestimonial: 0, mapModal: false, menuModal: false, zoom: 1, initialDistance: 0, initialZoom: 1, handleTouchStart(event) { if(event.touches.length === 2) { this.initialDistance = this.getDistance(event.touches[0], event.touches[1]); this.initialZoom = this.zoom; } }, handleTouchMove(event) { if(event.touches.length === 2) { event.preventDefault(); const currentDistance = this.getDistance(event.touches[0], event.touches[1]); this.zoom = Math.min(Math.max(this.initialZoom * (currentDistance / this.initialDistance), 0.5), 3); } }, handleTouchEnd() { this.initialDistance = 0; }, getDistance(touch1, touch2) { return Math.sqrt(Math.pow(touch2.clientX - touch1.clientX, 2) + Math.pow(touch2.clientY - touch1.clientY, 2)); }, userComments: [], commentForm: { name: '', comment: '', rating: 0 }, successMessage: false, supabaseReady: false, async init() { console.log('[init] component iniciado, supabaseClient:', !!window.supabaseClient); if (window.supabaseClient) { this.supabaseReady = true; await this.loadComments(); this.setupRealtime(); } else { console.warn('[init] esperando a supabaseClient...'); const check = setInterval(() => { if (window.supabaseClient) { console.log('[init] supabaseClient ahora disponible'); this.supabaseReady = true; this.loadComments(); this.setupRealtime(); clearInterval(check); } }, 100); } }, async loadComments() { if (!window.supabaseClient) { console.warn('[loadComments] supabaseClient no disponible'); return; } console.log('[loadComments] cargando comentarios...'); const { data, error } = await window.supabaseClient.from('comments').select('*').order('created_at', { ascending: false }).limit(50); console.log('[loadComments] respuesta:', { data, error }); if (!error && data) { this.userComments = data.map(c => ({ id: c.id, name: c.name, comment: c.comment, rating: c.rating, date: new Date(c.created_at).toLocaleDateString() })); console.log('[loadComments] comentarios cargados:', this.userComments.length); } else if (error) { console.error('[loadComments] error:', error); } }, async saveComment() { console.log('[saveComment] llamado con:', JSON.stringify(this.commentForm)); if (!window.supabaseClient) { console.error('[saveComment] supabaseClient NO está definido'); alert('Error: Supabase no está inicializado. Revisa la consola.'); return; } if (this.commentForm.name && this.commentForm.comment && this.commentForm.rating > 0) { console.log('[saveComment] insertando en Supabase...'); const { data, error } = await window.supabaseClient.from('comments').insert({ name: this.commentForm.name, comment: this.commentForm.comment, rating: this.commentForm.rating }).select(); console.log('[saveComment] respuesta:', { data, error }); if (!error) { this.commentForm = { name: '', comment: '', rating: 0 }; this.showSuccess(); console.log('[saveComment] comentario guardado exitosamente'); } else { console.error('[saveComment] error de Supabase:', error); alert('Error al guardar: ' + error.message); } } else { console.warn('[saveComment] validación fallida', { name: this.commentForm.name, comment: this.commentForm.comment, rating: this.commentForm.rating }); alert('Por favor completa nombre, comentario y calificación.'); } }, setupRealtime() { if (!window.supabaseClient) return; window.supabaseClient.channel('comments-realtime').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, payload => { const c = payload.new; this.userComments.unshift({ id: c.id, name: c.name, comment: c.comment, rating: c.rating, date: new Date(c.created_at).toLocaleDateString() }); }).subscribe(); }, showSuccess() { this.successMessage = true; confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); setTimeout(() => { this.successMessage = false; }, 3000); } }">
 
 <div class="noise-overlay"></div>
 
@@ -1324,7 +1316,7 @@
             </div>
           </div>
         </template>
-      </div>
+</div>
       <div class="max-w-md mx-auto card-glass rounded-3xl p-6">
         <h4 class="font-serif text-lg font-bold text-white mb-4 text-center">Deja tu Comentario</h4>
         <form @submit.prevent="saveComment()">
